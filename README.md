@@ -1,2 +1,2 @@
-# psuScrapyParser
+# psuParserTelegram
 Web Scraping for Diploma
