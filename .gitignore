@@ -132,3 +132,4 @@ dmypy.json
 .idea/modules.xml
 .idea/psuParserTelegram.iml
 .idea/vcs.xml
+auth_data.py
