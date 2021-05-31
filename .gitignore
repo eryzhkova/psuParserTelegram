@@ -133,3 +133,4 @@ dmypy.json
 .idea/psuParserTelegram.iml
 .idea/vcs.xml
 auth_data.py
+chromedriver.exe
