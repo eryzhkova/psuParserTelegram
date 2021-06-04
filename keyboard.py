@@ -61,8 +61,8 @@ class TelegramKeyboards:
     def ad_setting_replykeyboard(self):
         keyboard = types.ReplyKeyboardMarkup()
 
-        sell_ad = types.KeyboardButton(text='Продажа')
-        rent_ad = types.KeyboardButton(text='Аренда')
+        sell_ad = types.KeyboardButton(text='Купить')
+        rent_ad = types.KeyboardButton(text='Снимать')
 
         keyboard.row(sell_ad, rent_ad)
         return keyboard
@@ -83,7 +83,7 @@ class TelegramKeyboards:
 
     def rent_min_setting_replykeyboard(self):
         keyboard = types.ReplyKeyboardMarkup()
-        min = types.KeyboardButton(text='0')
+        min = types.KeyboardButton(text='Нет')
         min10 = types.KeyboardButton(text='10000')
         keyboard.row(min, min10)
         return keyboard
@@ -91,7 +91,7 @@ class TelegramKeyboards:
     def sell_min_setting_replykeyboard(self):
         keyboard = types.ReplyKeyboardMarkup()
 
-        min = types.KeyboardButton(text='0')
+        min = types.KeyboardButton(text='Нет')
         min1 = types.KeyboardButton(text='1000000')
 
         keyboard.row(min, min1)
