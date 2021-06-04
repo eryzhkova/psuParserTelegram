@@ -3,11 +3,23 @@ import telebot
 from telebot import types
 from keyboard import TelegramKeyboards
 
+
 def telegram_keyboard(token):
     bot = telebot.TeleBot(token, parse_mode='Markdown')
-    count_site = 0
+
+    sites = ['Авито', 'Циан', 'Домофонд']
+
+    count_sites = len(sites)
     city = "Пермь"
-    tel_keyboard = TelegramKeyboards(count_site, city)
+    house_type = "Новостройка"
+    ad_type = "Продажа"
+    count_room = "1"
+    min_price = "0"
+    max_price = "2000000"
+
+    settings_text = f'\n\n*Сайты*: {count_sites};\n*Типа дома*: {house_type};\n*Тип объявления*: {ad_type};\n*Количество комнат*: {count_room};\n*Цена*: от {min_price} до {max_price} руб.;\n*Местоположение*: {city}.'
+
+    tel_keyboard = TelegramKeyboards(count_sites, city)
 
     # Обработка команд
     @bot.message_handler(commands=["start"])
@@ -24,10 +36,10 @@ def telegram_keyboard(token):
     @bot.message_handler(commands=["settings"])
     def start_message(message):
         keyboard = types.InlineKeyboardMarkup()
-        settings_btn = types.InlineKeyboardButton(text='Посмотреть настройки', callback_data='settings')
+        settings_btn = types.InlineKeyboardButton(text='Настроить', callback_data='settings')
         keyboard.add(settings_btn)
         bot.send_message(message.chat.id,
-                         '*Раздел настроек*',
+                         text='*Раздел настроек*' + settings_text,
                          reply_markup=keyboard)
 
     @bot.message_handler(commands=["help"])
@@ -41,22 +53,77 @@ def telegram_keyboard(token):
         bot.send_message(message.chat.id, "Удаляем человека из БД")
 
     # Обработка callback'ов
-
     @bot.callback_query_handler(func=lambda call: call.data.startswith('settings'))
-    def callback_worker_promo(call):
+    def callback_settings(call):
         bot.send_message(call.message.chat.id,
-                         '*Критерии поиска* \nЗдесь ты можешь посмотреть настройки своего запроса '
+                         '*Настройка поиска* \nЗдесь ты можешь посмотреть настройки своего запроса '
                          'или изменить их',
                          reply_markup=tel_keyboard.main_setting_keyboard())
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('sites'))
-    def callback_worker_promo(call):
-        bot.send_message(call.message.chat.id,
-                         '*Сайты объявлений* \nЗдесь ты можешь посмотреть свои настройки, '
-                         'связанные с сайтами, где искать объявления',
-                         reply_markup=tel_keyboard.sites_setting_keyboard())
+    def callback_sites(call):
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text='*Сайты объявлений* \nЗдесь ты можешь посмотреть свои настройки, '
+                                   'связанные с _сайтами_, где искать объявления',
+                              reply_markup=tel_keyboard.sites_setting_keyboard())
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('location'))
+    def callback_location(call):
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text='*Местоположение* \nЗдесь ты можешь посмотреть свои настройки, '
+                                   'связанные с _местоположением_, где искать объявления',
+                              reply_markup=tel_keyboard.location_setting_keyboard())
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('okbtn'))
+    def callback_ok(call):
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text='*Сайты объявлений* \nЗдесь ты можешь посмотреть настройки своего запроса '
+                              'или изменить их',
+                              reply_markup=tel_keyboard.main_setting_keyboard())
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('confirmation'))
+    def callback_confirmation(call):
+        keyboard = types.InlineKeyboardMarkup()
+        confirmation = types.InlineKeyboardButton(text='Подтвердить', callback_data='close_dialog')
+        settings_btn = types.InlineKeyboardButton(text='Настроить', callback_data='settings')
+        keyboard.add(confirmation, settings_btn)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text='*Настройки* \nВаши настройки сохранены.' + settings_text,
+                              reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('close_dialog'))
+    def callback_close(call):
+        bot.send_message(chat_id=call.message.chat.id,
+                         text='*Все сохранено* \nИдет обработка запроса....')
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('filters'))
+    def callback_filters(call):
+        # TODO: Сделать словари для критериев
+        keyboard = types.InlineKeyboardMarkup()
+        confirmation = types.InlineKeyboardButton(text='Подтвердить', callback_data='confirmation')
+        settings_btn = types.InlineKeyboardButton(text='Настроить', callback_data='filter_settings')
+        keyboard.add(confirmation, settings_btn)
+        if house_type is None and ad_type is None and count_room is None and min_price is None and max_price is None:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text='*Критерии поиска* \nУпс, у вас еще ничего не настроено!',
+                                  reply_markup=keyboard)
+        elif max_price == "Нет" and min_price == "0":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {house_type};\n*Тип объявления*: {ad_type};\n*Количество комнат*: {count_room}.',
+                                  reply_markup=keyboard)
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {house_type};\n*Тип объявления*: {ad_type};\n*Количество комнат*: {count_room};\n*Цена*: от {min_price} до {max_price} руб.',
+                                  reply_markup=keyboard)
+
+
+    # Обработка данных от пользователя
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('filter_settings'))
+    def callback_filters_settings(call):
+        pass
 
     bot.polling()
+
 
 if __name__ == '__main__':
     telegram_keyboard(TOKEN)
