@@ -12,13 +12,17 @@ class TelegramKeyboards:
 
         realty_site = types.InlineKeyboardButton(text=f'Сайт объявлений [Выбрано: {self.sites}]', callback_data='sites')
         filters = types.InlineKeyboardButton(text='Критерии поиска', callback_data='filters')
-        location = types.InlineKeyboardButton(text=f'Местоположение [{self.city}]', callback_data='location')
+        if self.city is None:
+            location = types.InlineKeyboardButton(text='Местоположение [Не выбрано]', callback_data='location')
+        else:
+            location = types.InlineKeyboardButton(text=f'Местоположение [{self.city}]', callback_data='location')
+        view = types.InlineKeyboardButton(text=f'Просмотр', callback_data='view')
         confirmation = types.InlineKeyboardButton(text='Подтвердить', callback_data='confirmation')
 
         keyboard.add(realty_site)
         keyboard.add(filters)
         keyboard.add(location)
-        keyboard.add(confirmation)
+        keyboard.add(view, confirmation)
         return keyboard
 
     def sites_setting_keyboard(self):
@@ -31,6 +35,18 @@ class TelegramKeyboards:
 
         keyboard.add(avito, cian, domofond)
         keyboard.add(ok_btn)
+        return keyboard
+
+    def checked_sites_setting_keyboard(self, text_avito, text_cian, text_domofond):
+        keyboard = types.InlineKeyboardMarkup()
+        avito = types.InlineKeyboardButton(text=f'{text_avito}Авито', callback_data='avito')
+        cian = types.InlineKeyboardButton(text=f'{text_cian}Циан', callback_data='cian')
+        domofond = types.InlineKeyboardButton(text=f'{text_domofond}Домофонд', callback_data='domofond')
+        ok_btn = types.InlineKeyboardButton(text=f'ОК', callback_data='okbtn')
+        del_btn = types.InlineKeyboardButton(text=f'Убрать все', callback_data='delbtn')
+
+        keyboard.add(avito, cian, domofond)
+        keyboard.add(ok_btn, del_btn)
         return keyboard
 
     def location_setting_keyboard(self):
