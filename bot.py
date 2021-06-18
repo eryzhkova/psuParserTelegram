@@ -6,21 +6,11 @@ from telebot import types
 from keyboard import TelegramKeyboards
 
 
-def telegram_keyboard(bot, user):
+def telegram_keyboard(bot, users):
     # TODO: Сделать словари для критериев
     # TODO: Собрать ошибки для исключений
 
-    count_sites = len(user["sites"])
-    city = "Пермь"
-    house_type = "Новостройка"
-    ad_type = "Продажа"
-    count_room = "1"
-    min_price = "0"
-    max_price = "2000000"
-
-    settings_text = f'\n\n*Сайты*: {count_sites};\n*Типа дома*: {user["house_type"]};\n*Тип объявления*: {user["ad_type"]};\n*Количество комнат*: {user["count_room"]};\n*Цена*: от {user["min_price"]} до {user["max_price"]} руб.;\n*Местоположение*: {user["city"]}.'
-
-    tel_keyboard = TelegramKeyboards(len(user["sites"]), user["city"])
+    tel_keyboard = TelegramKeyboards()
 
     # Обработка команд
     @bot.message_handler(commands=["settings"])
@@ -28,7 +18,7 @@ def telegram_keyboard(bot, user):
         bot.send_message(message.chat.id,
                          '*Настройка поиска* \nЗдесь ты можешь посмотреть настройки своего запроса '
                          'или изменить их',
-                         reply_markup=tel_keyboard.main_setting_keyboard())
+                         reply_markup=tel_keyboard.main_setting_keyboard(users, message.chat.id))
 
     @bot.message_handler(commands=["help"])
     def start_message(message):
@@ -46,73 +36,145 @@ def telegram_keyboard(bot, user):
         bot.send_message(call.message.chat.id,
                          '*Настройка поиска* \nЗдесь ты можешь посмотреть настройки своего запроса '
                          'или изменить их',
-                         reply_markup=tel_keyboard.main_setting_keyboard())
+                         reply_markup=tel_keyboard.main_setting_keyboard(users, call.message.chat.id))
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('sites'))
-    def callback_sites(call):
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('okbtn'))
+    def callback_ok(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text='*Сайты объявлений* \nЗдесь ты можешь посмотреть свои настройки, '
-                                   'связанные с _сайтами_, где искать объявления',
-                              reply_markup=tel_keyboard.sites_setting_keyboard())
+                              text='*Сайты объявлений* \nЗдесь ты можешь посмотреть настройки своего запроса '
+                                   'или изменить их',
+                              reply_markup=tel_keyboard.main_setting_keyboard(users, call.message.chat.id))
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('view'))
+    def callback_view(call):
+        keyboard = types.InlineKeyboardMarkup()
+        okbtn = types.InlineKeyboardButton(text='OK', callback_data='okbtn')
+        keyboard.add(okbtn)
+        if users[f"{call.message.chat.id}"]["house_type"] is None and users[f"{call.message.chat.id}"][
+            "ad_type"] is None and users[f"{call.message.chat.id}"]["count_room"] is None and \
+                users[f"{call.message.chat.id}"]["min_price"] is None and users[f"{call.message.chat.id}"][
+            "max_price"] is None:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text='*Настройки* \nУпс, у вас еще ничего не настроено!',
+                                  reply_markup=keyboard)
+        elif users[f"{call.message.chat.id}"]["min_price"] == "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] == "Нет":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Настройки* \n\n*Сайты*: {users[f"{call.message.chat.id}"]["sites"]};\n*Тип дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Местоположение*: {users[f"{call.message.chat.id}"]["city"]}.\n',
+                                  reply_markup=keyboard)
+        elif users[f"{call.message.chat.id}"]["min_price"] == "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] != "Нет":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Настройки* \n\n*Сайты*: {users[f"{call.message.chat.id}"]["sites"]};\n*Тип дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: до {users[f"{call.message.chat.id}"]["max_price"]} руб.;\n*Местоположение*: {users[f"{call.message.chat.id}"]["city"]}.\n',
+                                  reply_markup=keyboard)
+        elif users[f"{call.message.chat.id}"]["min_price"] != "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] == "Нет":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Настройки* \n\n*Сайты*: {users[f"{call.message.chat.id}"]["sites"]};\n*Тип дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{call.message.chat.id}"]["min_price"]} руб.;\n*Местоположение*: {users[f"{call.message.chat.id}"]["city"]}.\n',
+                                  reply_markup=keyboard)
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Настройки* \n\n*Сайты*: {users[f"{call.message.chat.id}"]["sites"]};\n*Тип дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{call.message.chat.id}"]["min_price"]} до {users[f"{call.message.chat.id}"]["max_price"]} руб.;\n*Местоположение*: {users[f"{call.message.chat.id}"]["city"]}.\n',
+                                  reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('confirmation'))
+    def callback_close(call):
+        user_settings = {
+            "name": call.message.from_user.first_name,
+            "sites": users[f'{call.message.chat.id}']["sites"],
+            "city": users[f'{call.message.chat.id}']["city"],
+            "house_type": users[f'{call.message.chat.id}']["house_type"],
+            "ad_type": users[f'{call.message.chat.id}']["ad_type"],
+            "count_room": users[f'{call.message.chat.id}']["count_room"],
+            "min_price": users[f'{call.message.chat.id}']["min_price"],
+            "max_price": users[f'{call.message.chat.id}']["max_price"],
+        }
+        users[f'{call.message.chat.id}'] = user_settings
+        with open("users.json", "w", encoding='utf-8') as file:
+            json.dump(users, file, indent=4, ensure_ascii=False)
+        bot.send_message(chat_id=call.message.chat.id,
+                         text='*Все сохранено* \nИдет обработка запроса....')
 
     # Обработка сайтов
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('sites'))
+    def callback_sites(call):
+        if len(users[f'{call.message.chat.id}']["sites"]) == 0:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text='*Сайты объявлений* \nЗдесь ты можешь посмотреть свои настройки, '
+                                       'связанные с _сайтами_, где искать объявления',
+                                  reply_markup=tel_keyboard.sites_setting_keyboard())
+        else:
+            if "Авито" in users[f'{call.message.chat.id}']["sites"]:
+                avito_checked = True
+            else:
+                avito_checked = False
+            if "Циан" in users[f'{call.message.chat.id}']["sites"]:
+                cian_checked = True
+            else:
+                cian_checked = False
+            if "Домофонд" in users[f'{call.message.chat.id}']["sites"]:
+                domofond_checked = True
+            else:
+                domofond_checked = False
+            send_keyboard(avito_checked, cian_checked, domofond_checked, call)
+
     @bot.callback_query_handler(func=lambda call: call.data.startswith('avito'))
     def callback_sites_checked(call):
-        sites = user["sites"]
-        avito_checked = True
-        cian_checked = False
-        domofond_checked = False
-        if "Авито" in sites:
+        if "Авито" in users[f'{call.message.chat.id}']["sites"]:
             avito_checked = False
-            sites.remove("Авито")
+            users[f'{call.message.chat.id}']["sites"].remove("Авито")
         else:
-            sites.append("Авито")
-        if "Циан" in sites:
+            avito_checked = True
+            users[f'{call.message.chat.id}']["sites"].append("Авито")
+        if "Циан" in users[f'{call.message.chat.id}']["sites"]:
             cian_checked = True
-        if "Домофонд" in sites:
+        else:
+            cian_checked = False
+        if "Домофонд" in users[f'{call.message.chat.id}']["sites"]:
             domofond_checked = True
-        user["sites"] = sites
+        else:
+            domofond_checked = False
         send_keyboard(avito_checked, cian_checked, domofond_checked, call)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('cian'))
     def callback_sites_checked(call):
-        sites = user["sites"]
-        avito_checked = False
-        cian_checked = True
-        domofond_checked = False
-        if "Авито" in sites:
+        if "Авито" in users[f'{call.message.chat.id}']["sites"]:
             avito_checked = True
-        if "Циан" in sites:
-            cian_checked = False
-            sites.remove("Циан")
         else:
-            sites.append("Циан")
-        if "Домофонд" in sites:
+            avito_checked = False
+        if "Циан" in users[f'{call.message.chat.id}']["sites"]:
+            cian_checked = False
+            users[f'{call.message.chat.id}']["sites"].remove("Циан")
+        else:
+            cian_checked = True
+            users[f'{call.message.chat.id}']["sites"].append("Циан")
+        if "Домофонд" in users[f'{call.message.chat.id}']["sites"]:
             domofond_checked = True
-        user["sites"] = sites
+        else:
+            domofond_checked = False
         send_keyboard(avito_checked, cian_checked, domofond_checked, call)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('domofond'))
     def callback_sites_checked(call):
-        sites = user["sites"]
-        avito_checked = False
-        cian_checked = False
-        domofond_checked = True
-        if "Авито" in sites:
+        if "Авито" in users[f'{call.message.chat.id}']["sites"]:
             avito_checked = True
-        if "Циан" in sites:
-            cian_checked = True
-        if "Домофонд" in sites:
-            domofond_checked = False
-            sites.remove("Домофонд")
         else:
-            sites.append("Домофонд")
-        user["sites"] = sites
+            avito_checked = False
+        if "Циан" in users[f'{call.message.chat.id}']["sites"]:
+            cian_checked = True
+        else:
+            cian_checked = False
+        if "Домофонд" in users[f'{call.message.chat.id}']["sites"]:
+            domofond_checked = False
+            users[f'{call.message.chat.id}']["sites"].remove("Домофонд")
+        else:
+            domofond_checked = True
+            users[f'{call.message.chat.id}']["sites"].append("Домофонд")
         send_keyboard(avito_checked, cian_checked, domofond_checked, call)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('delbtn'))
     def callback_sites_checked(call):
-        user["sites"] = []
+        users[f'{call.message.chat.id}']["sites"] = []
         send_keyboard(False, False, False, call)
 
     def send_keyboard(avito_checked, cian_checked, domofond_checked, call):
@@ -122,55 +184,149 @@ def telegram_keyboard(bot, user):
         keyboard = tel_keyboard.checked_sites_setting_keyboard(text_avito, text_cian, text_domofond)
         bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
 
+    # Обработка местоположения
     @bot.callback_query_handler(func=lambda call: call.data.startswith('location'))
     def callback_location(call):
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text='*Местоположение* \nЗдесь ты можешь посмотреть свои настройки, '
-                                   'связанные с _местоположением_, где искать объявления',
-                              reply_markup=tel_keyboard.location_setting_keyboard())
+        if users[f'{call.message.chat.id}']["city"] is None:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text='*Местоположение* \nЗдесь ты можешь посмотреть свои настройки, '
+                                       'связанные с _местоположением_, где искать объявления',
+                                  reply_markup=tel_keyboard.location_setting_keyboard())
+        else:
+            if users[f'{call.message.chat.id}']["city"] == "Пермь":
+                perm_checked = True
+                lysva_checked = False
+                permkrai_checked = False
+                dobryanka_checked = False
+            else:
+                perm_checked = False
+                if users[f'{call.message.chat.id}']["city"] == "Лысьва":
+                    lysva_checked = True
+                    permkrai_checked = False
+                    dobryanka_checked = False
+                else:
+                    lysva_checked = False
+                    if users[f'{call.message.chat.id}']["city"] == "Пермский край":
+                        permkrai_checked = True
+                        dobryanka_checked = False
+                    else:
+                        permkrai_checked = False
+                        if users[f'{call.message.chat.id}']["city"] == "Добрянка":
+                            dobryanka_checked = True
+                        else:
+                            dobryanka_checked = False
+            send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('okbtn'))
-    def callback_ok(call):
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text='*Сайты объявлений* \nЗдесь ты можешь посмотреть настройки своего запроса '
-                                   'или изменить их',
-                              reply_markup=tel_keyboard.main_setting_keyboard())
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('perm'))
+    def callback_perm_checked(call):
+        if users[f'{call.message.chat.id}']["city"] == "Пермь":
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = []
+        else:
+            perm_checked = True
+            users[f'{call.message.chat.id}']["city"] = "Пермь"
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = False
+        send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('view'))
-    def callback_view(call):
-        keyboard = types.InlineKeyboardMarkup()
-        okbtn = types.InlineKeyboardButton(text='OK', callback_data='okbtn')
-        keyboard.add(okbtn)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                              text='*Настройки*' + settings_text,
-                              reply_markup=keyboard)
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('confirmation'))
-    def callback_close(call):
-        # TODO: сделать норм запись с проверкой наличия ID
-        # new_settings = {f'{call.message.chat.id}: {user}'}
-        with open("users.json", "w", encoding='utf-8') as file:
-            json.dump(user, file, indent=4, ensure_ascii=False)
-        bot.send_message(chat_id=call.message.chat.id,
-                         text='*Все сохранено* \nИдет обработка запроса....')
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('lysva'))
+    def callback_perm_checked(call):
+        if users[f'{call.message.chat.id}']["city"] == "Лысьва":
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = []
+        else:
+            perm_checked = False
+            lysva_checked = True
+            permkrai_checked = False
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = "Лысьва"
+        send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
 
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('permkrai'))
+    def callback_perm_checked(call):
+        if users[f'{call.message.chat.id}']["city"] == "Пермский край":
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = []
+        else:
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = True
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = "Пермский край"
+        send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('dobryanka'))
+    def callback_perm_checked(call):
+        if users[f'{call.message.chat.id}']["city"] == "Добрянка":
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = False
+            users[f'{call.message.chat.id}']["city"] = []
+        else:
+            perm_checked = False
+            lysva_checked = False
+            permkrai_checked = False
+            dobryanka_checked = True
+            users[f'{call.message.chat.id}']["city"] = "Добрянка"
+        send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('clearbtn'))
+    def callback_location_checked(call):
+        users[f'{call.message.chat.id}']["city"] = []
+        send_loc_keyboard(False, False, False, False, call)
+
+    def send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call):
+        text_perm = "Выбрано: " if perm_checked else ""
+        text_lysva = "Выбрано: " if lysva_checked else ""
+        text_permkrai = "Выбрано: " if permkrai_checked else ""
+        text_dobryanka = "Выбрано: " if dobryanka_checked else ""
+        keyboard = tel_keyboard.checked_location_setting_keyboard(text_perm, text_lysva, text_permkrai, text_dobryanka)
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=keyboard)
+
+    # Обработка критериев поиска
     @bot.callback_query_handler(func=lambda call: call.data.startswith('filters'))
     def callback_filters(call):
         keyboard = types.InlineKeyboardMarkup()
-        confirmation = types.InlineKeyboardButton(text='Подтвердить', callback_data='view')
+        okbtn = types.InlineKeyboardButton(text='OK', callback_data='okbtn')
         settings_btn = types.InlineKeyboardButton(text='Настроить', callback_data='filter_settings')
-        keyboard.add(confirmation, settings_btn)
-        if house_type is None and ad_type is None and count_room is None and min_price is None and max_price is None:
+        keyboard.add(okbtn, settings_btn)
+        if users[f"{call.message.chat.id}"]["house_type"] is None and users[f"{call.message.chat.id}"][
+            "ad_type"] is None and users[f"{call.message.chat.id}"]["count_room"] is None and \
+                users[f"{call.message.chat.id}"]["min_price"] is None and users[f"{call.message.chat.id}"][
+            "max_price"] is None:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
                                   text='*Критерии поиска* \nУпс, у вас еще ничего не настроено!',
                                   reply_markup=keyboard)
-        elif max_price == "Нет" and min_price == "Нет":
+        elif users[f"{call.message.chat.id}"]["min_price"] == "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] == "Нет":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text=f'*Критерии поиска* \n\n*Типа дома*: {house_type};\n*Тип объявления*: {ad_type};\n*Количество комнат*: {count_room}.',
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]}.',
+                                  reply_markup=keyboard)
+        elif users[f"{call.message.chat.id}"]["min_price"] == "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] != "Нет":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: до {users[f"{call.message.chat.id}"]["max_price"]} руб.',
+                                  reply_markup=keyboard)
+        elif users[f"{call.message.chat.id}"]["min_price"] != "Нет" and users[f"{call.message.chat.id}"][
+            "max_price"] == "Нет":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{call.message.chat.id}"]["min_price"]} руб.',
                                   reply_markup=keyboard)
         else:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text=f'*Критерии поиска* \n\n*Типа дома*: {house_type};\n*Тип объявления*: {ad_type};\n*Количество комнат*: {count_room};\n*Цена*: от {min_price} до {max_price} руб.',
+                                  text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{call.message.chat.id}"]["min_price"]} до {users[f"{call.message.chat.id}"]["max_price"]} руб.',
                                   reply_markup=keyboard)
 
     # Обработка данных от пользователя
@@ -185,27 +341,25 @@ def telegram_keyboard(bot, user):
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Тип дома* \nКакой тип недвижимости Вас интересует?',
                                reply_markup=tel_keyboard.house_setting_replykeyboard())
-        house_type = message.text
-        print(house_type)
         bot.register_next_step_handler(msg, ad_chat)
 
     @bot.message_handler(content_types=["text"])
     def ad_chat(message):
+        house_type = message.text
+        users[f'{message.chat.id}']["house_type"] = house_type
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Тип объявления* \nХотите купить или снимать?',
                                reply_markup=tel_keyboard.ad_setting_replykeyboard())
-        ad_type = message.text
-        print(ad_type)
         bot.register_next_step_handler(msg, room_chat)
 
     @bot.message_handler(content_types=["text"])
     def room_chat(message):
+        ad_type = message.text
+        users[f'{message.chat.id}']["ad_type"] = ad_type
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Количество комнат* \nКакое количество комнат? \nМожете выбрать из предложанных '
                                     'или ввести одну цифру, либо несколько через запятую (",") или дефис ("-").',
                                reply_markup=tel_keyboard.room_setting_replykeyboard())
-        count_room = message.text
-        print(count_room)
         if ad_type == "Снимать":
             bot.register_next_step_handler(msg, rent_min_chat)
         else:
@@ -213,43 +367,65 @@ def telegram_keyboard(bot, user):
 
     @bot.message_handler(content_types=["text"])
     def rent_min_chat(message):
+        count_room = message.text
+        users[f'{message.chat.id}']["count_room"] = count_room
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Ограничения цены* \nВыберите или напишите минимальную цену недвижимости?',
                                reply_markup=tel_keyboard.rent_min_setting_replykeyboard())
-        min_price = message.text
-        print(min_price)
         bot.register_next_step_handler(msg, rent_max_chat)
 
     def rent_max_chat(message):
+        min_price = message.text
+        users[f'{message.chat.id}']["min_price"] = min_price
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Ограничения цены* \nВыберите или напишите максимальную цену недвижимости?',
                                reply_markup=tel_keyboard.rent_max_setting_replykeyboard())
-        max_price = message.text
-        print(max_price)
         bot.register_next_step_handler(msg, close_dialog)
 
     @bot.message_handler(content_types=["text"])
     def sell_min_chat(message):
+        count_room = message.text
+        users[f'{message.chat.id}']["count_room"] = count_room
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Ограничения цены* \nВыберите или напишите минимальную цену недвижимости?',
                                reply_markup=tel_keyboard.sell_min_setting_replykeyboard())
-        min_price = message.text
-        print(min_price)
         bot.register_next_step_handler(msg, sell_max_chat)
 
     @bot.message_handler(content_types=["text"])
     def sell_max_chat(message):
+        min_price = message.text
+        users[f'{message.chat.id}']["min_price"] = min_price
         msg = bot.send_message(chat_id=message.chat.id,
                                text='*Ограничения цены* \nВыберите или напишите максимальную цену недвижимости?',
                                reply_markup=tel_keyboard.sell_max_setting_replykeyboard())
-        max_price = message.text
-        print(max_price)
         bot.register_next_step_handler(msg, close_dialog)
 
     @bot.message_handler(content_types=["text"])
     def close_dialog(message):
+        max_price = message.text
+        users[f'{message.chat.id}']["max_price"] = max_price
         keyboard = types.ReplyKeyboardRemove(selective=False)
         bot.send_message(message.chat.id, "Настройки сохранены.", reply_markup=keyboard)
+        keyboard_btn = types.InlineKeyboardMarkup()
+        okbtn = types.InlineKeyboardButton(text='OK', callback_data='okbtn')
+        settings_btn = types.InlineKeyboardButton(text='Настроить', callback_data='filter_settings')
+        keyboard_btn.add(okbtn, settings_btn)
+        if users[f"{message.chat.id}"]["min_price"] == "Нет" and users[f"{message.chat.id}"]["max_price"] == "Нет":
+            bot.send_message(chat_id=message.chat.id,
+                             text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{message.chat.id}"]["count_room"]}.',
+                             reply_markup=keyboard_btn)
+        elif users[f"{message.chat.id}"]["min_price"] == "Нет" and users[f"{message.chat.id}"]["max_price"] != "Нет":
+            bot.send_message(chat_id=message.chat.id,
+                             text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{message.chat.id}"]["count_room"]};\n*Цена*: до {users[f"{message.chat.id}"]["max_price"]} руб.',
+                             reply_markup=keyboard_btn)
+        elif users[f"{message.chat.id}"]["min_price"] != "Нет" and users[f"{message.chat.id}"]["max_price"] == "Нет":
+            bot.send_message(chat_id=message.chat.id,
+                             text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{message.chat.id}"]["min_price"]} руб.',
+                             reply_markup=keyboard_btn)
+        else:
+            bot.send_message(chat_id=message.chat.id,
+                             text=f'*Критерии поиска* \n\n*Типа дома*: {users[f"{message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{message.chat.id}"]["min_price"]} до {users[f"{message.chat.id}"]["max_price"]} руб.',
+                             reply_markup=keyboard_btn)
 
 
 def main():
@@ -260,7 +436,6 @@ def main():
         keyboard = types.InlineKeyboardMarkup()
         settings_btn = types.InlineKeyboardButton(text='Настроить нужный поиск', callback_data='settings')
         keyboard.add(settings_btn)
-
         with open("users.json", encoding='utf-8') as file:
             users = json.load(file)
         try:
@@ -285,7 +460,9 @@ def main():
                          f'обновления! \nЕсли кнопка не отображается '
                          'напиши боту команду */settings*',
                          reply_markup=keyboard)
-        telegram_keyboard(bot, users[f'{message.chat.id}'])
+        with open("users.json", encoding='utf-8') as file:
+            users = json.load(file)
+        telegram_keyboard(bot, users)
 
     bot.polling()
 

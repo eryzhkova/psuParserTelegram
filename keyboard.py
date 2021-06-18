@@ -3,19 +3,17 @@ from telebot import types
 
 class TelegramKeyboards:
 
-    def __init__(self, sites, city):
-        self.sites = sites
-        self.city = city
-
-    def main_setting_keyboard(self):
+    def main_setting_keyboard(self, user, id):
         keyboard = types.InlineKeyboardMarkup()
+        sites = len(user[f'{id}']["sites"])
+        city = user[f'{id}']["city"]
 
-        realty_site = types.InlineKeyboardButton(text=f'Сайт объявлений [Выбрано: {self.sites}]', callback_data='sites')
+        realty_site = types.InlineKeyboardButton(text=f'Сайт объявлений [Выбрано: {sites}]', callback_data='sites')
         filters = types.InlineKeyboardButton(text='Критерии поиска', callback_data='filters')
-        if self.city is None:
+        if city is None:
             location = types.InlineKeyboardButton(text='Местоположение [Не выбрано]', callback_data='location')
         else:
-            location = types.InlineKeyboardButton(text=f'Местоположение [{self.city}]', callback_data='location')
+            location = types.InlineKeyboardButton(text=f'Местоположение [{city}]', callback_data='location')
         view = types.InlineKeyboardButton(text=f'Просмотр', callback_data='view')
         confirmation = types.InlineKeyboardButton(text='Подтвердить', callback_data='confirmation')
 
@@ -53,7 +51,7 @@ class TelegramKeyboards:
         keyboard = types.InlineKeyboardMarkup()
 
         perm = types.InlineKeyboardButton(text=f'Пермь', callback_data='perm')
-        lisva = types.InlineKeyboardButton(text='Лысьва', callback_data='lisva')
+        lisva = types.InlineKeyboardButton(text='Лысьва', callback_data='lysva')
         permkrai = types.InlineKeyboardButton(text=f'Пермский край', callback_data='permkrai')
         dobryanka = types.InlineKeyboardButton(text=f'Добрянка', callback_data='dobryanka')
         ok_btn = types.InlineKeyboardButton(text=f'ОК', callback_data='okbtn')
@@ -61,6 +59,20 @@ class TelegramKeyboards:
         keyboard.add(perm, lisva, dobryanka)
         keyboard.add(permkrai)
         keyboard.add(ok_btn)
+        return keyboard
+
+    def checked_location_setting_keyboard(self, text_perm, text_lysva, text_permkrai, text_dobryanka):
+        keyboard = types.InlineKeyboardMarkup()
+        perm = types.InlineKeyboardButton(text=f'{text_perm}Пермь', callback_data='perm')
+        lisva = types.InlineKeyboardButton(text=f'{text_lysva}Лысьва', callback_data='lysva')
+        permkrai = types.InlineKeyboardButton(text=f'{text_permkrai}Пермский край', callback_data='permkrai')
+        dobryanka = types.InlineKeyboardButton(text=f'{text_dobryanka}Добрянка', callback_data='dobryanka')
+        ok_btn = types.InlineKeyboardButton(text=f'ОК', callback_data='okbtn')
+        del_btn = types.InlineKeyboardButton(text=f'Очистить', callback_data='clearbtn')
+
+        keyboard.add(perm, lisva, dobryanka)
+        keyboard.add(permkrai)
+        keyboard.add(ok_btn, del_btn)
         return keyboard
 
     def house_setting_replykeyboard(self):
