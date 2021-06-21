@@ -3,10 +3,10 @@ from telebot import types
 
 class TelegramKeyboards:
 
-    def main_setting_keyboard(self, user, id):
+    def main_setting_keyboard(self, users, id):
         keyboard = types.InlineKeyboardMarkup()
-        sites = len(user[f'{id}']["sites"])
-        city = user[f'{id}']["city"]
+        sites = len(users[f'{id}']["sites"])
+        city = users[f'{id}']["city"]
 
         realty_site = types.InlineKeyboardButton(text=f'Сайт объявлений [Выбрано: {sites}]', callback_data='sites')
         filters = types.InlineKeyboardButton(text='Критерии поиска', callback_data='filters')
