@@ -134,3 +134,6 @@ dmypy.json
 .idea/vcs.xml
 auth_data.py
 chromedriver.exe
+test.py
+users.json
+users.json
