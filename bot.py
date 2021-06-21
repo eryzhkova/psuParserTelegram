@@ -4,6 +4,7 @@ from auth_data import TOKEN
 import telebot
 from telebot import types
 from keyboard import TelegramKeyboards
+from parser_helper import ParserHelper
 
 
 def telegram_keyboard(bot, users):
@@ -94,6 +95,8 @@ def telegram_keyboard(bot, users):
             json.dump(users, file, indent=4, ensure_ascii=False)
         bot.send_message(chat_id=call.message.chat.id,
                          text='*Все сохранено* \nИдет обработка запроса....')
+        parser_helper = ParserHelper()
+        parser_helper.get_data(call.message.chat.id)
 
     # Обработка сайтов
     @bot.callback_query_handler(func=lambda call: call.data.startswith('sites'))
