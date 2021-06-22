@@ -1,4 +1,4 @@
-from avito_helper import AvitoHelper
+from site_helper import SiteHelper
 from auth_data import CHROMEDRIVER_PATH, PROXY, TOKEN
 from fake_useragent import UserAgent
 from seleniumwire import webdriver
@@ -40,11 +40,11 @@ class ParserHelper:
         urls = []
         sites = users[f'{id}']["sites"]
         if "Авито" in sites:
-            avito = AvitoHelper()
-            if isinstance(avito.get_url(users, id), list):
-                urls = urls + avito.get_url(users, id)
+            site = SiteHelper()
+            if isinstance(site.get_url(users, id), list):
+                urls = urls + site.get_url(users, id)
             else:
-                urls.append(avito.get_url(users, id))
+                urls.append(site.get_url(users, id))
         if "Циан" in sites:
             urls.append("https://perm.cian.ru/")
         if "Домофонд" in sites:

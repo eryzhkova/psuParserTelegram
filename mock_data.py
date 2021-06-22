@@ -1,8 +1,7 @@
-from avito_helper import AvitoHelper
+from site_helper import SiteHelper
 from multiprocessing import Pool
 import json
 from bs4 import BeautifulSoup
-import os
 
 
 class MockHelper:
@@ -14,26 +13,45 @@ class MockHelper:
         with open(f"mock_data/htmls/{path}search.html", encoding='utf-8') as file:
             search = file.read()
         soup = BeautifulSoup(search, "lxml")
-        items = soup.find_all('div', {'data-marker': 'item'})
-        for item in items:
-            url = item.find('a')['href']
-            with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
-                file.write(url)
-                file.write('\n')
+
+        if path.split('/')[0] == 'avito':
+            items = soup.find_all('div', {'data-marker': 'item'})
+            for item in items:
+                url = item.find('a')['href']
+                with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
+                    file.write(url)
+                    file.write('\n')
+        print(path.split('/')[0])
+        if path.split('/')[0] == 'cian':
+            items = soup.find_all('article', {'data-name': 'CardComponent'})
+            for item in items:
+                url = item.find('a')['href']
+                print(url)
+                with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
+                    file.write(url)
+                    file.write('\n')
+
+        if path.split('/')[0] == 'domofond':
+            pass
 
     def get_urls(self, users, id):
         urls = []
         sites = users[f'{id}']["sites"]
+        site = SiteHelper()
+        checked_sites = []
+
         if "Авито" in sites:
-            avito = AvitoHelper()
-            if isinstance(avito.get_path(users, id), list):
-                urls = urls + avito.get_path(users, id)
-            else:
-                urls.append(avito.get_path(users, id))
+            checked_sites.append('avito')
         if "Циан" in sites:
-            urls.append("https://perm.cian.ru/")
+            checked_sites.append('cian')
         if "Домофонд" in sites:
-            urls.append("https://www.domofond.ru/")
+            checked_sites.append('domofond')
+
+        for checked_site in checked_sites:
+            if isinstance(site.get_path(users, id, checked_site), list):
+                urls = urls + site.get_path(users, id, checked_site)
+            else:
+                urls.append(site.get_path(users, id, checked_site))
 
         return urls
 
@@ -54,4 +72,3 @@ class MockHelper:
             urls_list = urls_list.split()
 
         return urls_list
-
