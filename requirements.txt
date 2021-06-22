@@ -1,3 +1,4 @@
+beautifulsoup4==4.9.3
 blinker==1.4
 certifi==2020.12.5
 cffi==1.14.5
@@ -10,6 +11,7 @@ hpack==4.0.0
 hyperframe==6.0.1
 idna==2.10
 kaitaistruct==0.9
+lxml==4.6.3
 pyasn1==0.4.8
 pycparser==2.20
 pydivert==2.1.0
@@ -21,5 +23,6 @@ requests==2.25.1
 selenium==3.141.0
 selenium-wire==4.3.0
 six==1.16.0
+soupsieve==2.2.1
 urllib3==1.26.4
 wsproto==1.0.0

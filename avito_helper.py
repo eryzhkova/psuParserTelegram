@@ -31,6 +31,29 @@ class AvitoHelper:
         if init_data == "Лысьва":
             return "lysva"
 
+    def get_path(self, users, id):
+        location = self.parse_loc_to_avito_url(users[f'{id}']["city"])
+        ad_type = self.parse_adtype_to_avito_url(users[f'{id}']["ad_type"])
+        count_room = self.parse_room_to_avito_url(users[f'{id}']["count_room"])
+
+        paths = []
+        if ad_type == "sdam":
+            if isinstance(count_room, list):
+                for i in count_room:
+                    paths.append(
+                        f"avito/{location}/{ad_type}/{i}-komnatnye/")
+            else:
+                return f"avito/{location}/{ad_type}/{count_room}-komnatnye/"
+        else:
+            house_type = self.parse_housetype_to_avito_url(users[f'{id}']["house_type"])
+            if isinstance(count_room, list):
+                for i in count_room:
+                    paths.append(
+                        f"avito/{location}/{ad_type}{house_type}/{i}-komnatnye/")
+            else:
+                return f"avito/{location}/{ad_type}{house_type}/{count_room}-komnatnye/"
+        return paths
+
     def get_url(self, users, id):
 
         location = self.parse_loc_to_avito_url(users[f'{id}']["city"])

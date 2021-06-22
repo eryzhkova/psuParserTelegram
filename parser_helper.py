@@ -3,7 +3,6 @@ from auth_data import CHROMEDRIVER_PATH, PROXY, TOKEN
 from fake_useragent import UserAgent
 from seleniumwire import webdriver
 from multiprocessing import Pool
-import time
 import json
 
 
@@ -15,7 +14,7 @@ class ParserHelper:
         options = webdriver.ChromeOptions()
         options.add_argument(f"user-agent={user_agent.random}")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
 
         # set proxy
         proxy_options = {
@@ -30,10 +29,7 @@ class ParserHelper:
             options=options)
 
         try:
-            # driver.get("https://2ip.ru")
-            # driver.get("https://www.whatismybrowser.com/detect/what-is-my-user-agent")
             driver.get(url)
-            time.sleep(3000)
         except Exception as ex:
             print(ex)
         finally:
