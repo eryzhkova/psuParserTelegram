@@ -30,7 +30,13 @@ class MockHelper:
                     file.write('\n')
 
         if path.split('/')[0] == 'domofond':
-            pass
+            # long-item-card__item___ubItG
+            items = soup.find_all('a', {'class': 'long-item-card__item___ubItG'})
+            for item in items:
+                url = item['href']
+                with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
+                    file.write(url)
+                    file.write('\n')
 
     def get_urls(self, users, id):
         urls = []
