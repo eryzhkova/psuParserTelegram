@@ -21,12 +21,10 @@ class MockHelper:
                 with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
                     file.write(url)
                     file.write('\n')
-        print(path.split('/')[0])
         if path.split('/')[0] == 'cian':
             items = soup.find_all('article', {'data-name': 'CardComponent'})
             for item in items:
                 url = item.find('a')['href']
-                print(url)
                 with open(f"mock_data/urls/{self.id}_urls.txt", "a", encoding='utf-8') as file:
                     file.write(url)
                     file.write('\n')
