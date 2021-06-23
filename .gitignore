@@ -132,8 +132,9 @@ dmypy.json
 .idea/modules.xml
 .idea/psuParserTelegram.iml
 .idea/vcs.xml
+.idea/
 auth_data.py
 chromedriver.exe
 test.py
 users.json
-users.json
+/mock_data

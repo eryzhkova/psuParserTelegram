@@ -4,8 +4,10 @@ from auth_data import TOKEN
 import telebot
 from telebot import types
 from keyboard import TelegramKeyboards
-from parser_helper import ParserHelper
+from mock_data import MockHelper
 
+
+# from parser_helper import ParserHelper
 
 def telegram_keyboard(bot, users):
     # TODO: Сделать словари для критериев
@@ -92,6 +94,9 @@ def telegram_keyboard(bot, users):
                                   text=f'*Настройки* \n\n*Сайты*: {users[f"{call.message.chat.id}"]["sites"]};\n*Тип дома*: {users[f"{call.message.chat.id}"]["house_type"]};\n*Тип объявления*: {users[f"{call.message.chat.id}"]["ad_type"]};\n*Количество комнат*: {users[f"{call.message.chat.id}"]["count_room"]};\n*Цена*: от {users[f"{call.message.chat.id}"]["min_price"]} до {users[f"{call.message.chat.id}"]["max_price"]} руб.;\n*Местоположение*: {users[f"{call.message.chat.id}"]["city"]}.\n',
                                   reply_markup=keyboard)
 
+    item_count = 0
+    data_list = []
+
     @bot.callback_query_handler(func=lambda call: call.data.startswith('confirmation'))
     def callback_close(call):
         user_settings = {
@@ -109,8 +114,59 @@ def telegram_keyboard(bot, users):
             json.dump(users, file, indent=4, ensure_ascii=False)
         bot.send_message(chat_id=call.message.chat.id,
                          text='*Все сохранено* \nИдет обработка запроса....')
-        parser_helper = ParserHelper()
-        parser_helper.get_data(call.message.chat.id)
+        # Для реальных запросов
+        # parser_helper = ParserHelper()
+        # parser_helper.get_data(call.message.chat.id)
+
+        # Для мокс-запросов
+        mock_data = MockHelper(call.message.chat.id)
+        nonlocal data_list
+        data_list = mock_data.get_data(call.message.chat.id)
+        send_response_data(call)
+
+    def send_response_data(call):
+        keyboard = types.InlineKeyboardMarkup()
+
+        next = types.InlineKeyboardButton(text='Далее', callback_data='next')
+        main = types.InlineKeyboardButton(text='В главное меню', callback_data='main')
+        keyboard.add(next, main)
+
+        nonlocal data_list
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                              text='*Все сохранено* \nСейчас Вам будут приходить ссылки на объекты, которые '
+                                   'соответствуют вашему запросу по одному.\n\n'
+                                   'Чтобы получить следующий объект - нажмите "Далее"\n'
+                                   'Чтобы выйти в главное меню и изменить настройки '
+                                   'и перестать получать обновление - нажмите "В главное меню"')
+        text = f'[{data_list[0]}]({data_list[0]})'
+        bot.send_message(chat_id=call.message.chat.id,
+                             text=f'*Ссылка по запросу* \n{text}',
+                             reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('next'))
+    def callback_next(call):
+        keyboard = types.InlineKeyboardMarkup()
+
+        next = types.InlineKeyboardButton(text='Далее', callback_data='next')
+        main = types.InlineKeyboardButton(text='В главное меню', callback_data='main')
+        keyboard.add(next, main)
+
+        nonlocal item_count
+        nonlocal data_list
+
+        item_count += 1
+        print(item_count)
+        text = f'[{data_list[item_count]}]({data_list[item_count]})'
+        bot.send_message(chat_id=call.message.chat.id,
+                         text=f'*Ссылка по запросу* \n{text}',
+                         reply_markup=keyboard)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('main'))
+    def callback_main(call):
+        bot.send_message(chat_id=call.message.chat.id,
+                         text='*Сайты объявлений* \nЗдесь ты можешь посмотреть настройки своего запроса '
+                              'или изменить их',
+                         reply_markup=tel_keyboard.main_setting_keyboard(users, call.message.chat.id))
 
     # Обработка сайтов
     @bot.callback_query_handler(func=lambda call: call.data.startswith('sites'))
@@ -249,7 +305,6 @@ def telegram_keyboard(bot, users):
             permkrai_checked = False
             dobryanka_checked = False
         send_loc_keyboard(perm_checked, lysva_checked, permkrai_checked, dobryanka_checked, call)
-
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('lysva'))
     def callback_perm_checked(call):

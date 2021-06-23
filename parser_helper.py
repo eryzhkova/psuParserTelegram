@@ -1,9 +1,8 @@
-from avito_helper import AvitoHelper
+from site_helper import SiteHelper
 from auth_data import CHROMEDRIVER_PATH, PROXY, TOKEN
 from fake_useragent import UserAgent
 from seleniumwire import webdriver
 from multiprocessing import Pool
-import time
 import json
 
 
@@ -15,7 +14,7 @@ class ParserHelper:
         options = webdriver.ChromeOptions()
         options.add_argument(f"user-agent={user_agent.random}")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
 
         # set proxy
         proxy_options = {
@@ -30,10 +29,7 @@ class ParserHelper:
             options=options)
 
         try:
-            # driver.get("https://2ip.ru")
-            # driver.get("https://www.whatismybrowser.com/detect/what-is-my-user-agent")
             driver.get(url)
-            time.sleep(3000)
         except Exception as ex:
             print(ex)
         finally:
@@ -44,11 +40,11 @@ class ParserHelper:
         urls = []
         sites = users[f'{id}']["sites"]
         if "Авито" in sites:
-            avito = AvitoHelper()
-            if isinstance(avito.get_url(users, id), list):
-                urls = urls + avito.get_url(users, id)
+            site = SiteHelper()
+            if isinstance(site.get_url(users, id), list):
+                urls = urls + site.get_url(users, id)
             else:
-                urls.append(avito.get_url(users, id))
+                urls.append(site.get_url(users, id))
         if "Циан" in sites:
             urls.append("https://perm.cian.ru/")
         if "Домофонд" in sites:
