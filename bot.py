@@ -29,7 +29,21 @@ def telegram_keyboard(bot, users):
 
     @bot.message_handler(commands=["stop"])
     def start_message(message):
-        bot.send_message(message.chat.id, "Удаляем человека из БД")
+        user_settings = {
+            "name": "Elena",
+            "sites": [],
+            "city": None,
+            "house_type": None,
+            "ad_type": None,
+            "count_room": None,
+            "min_price": None,
+            "max_price": None
+        }
+        users[f'{message.chat.id}'] = user_settings
+        with open("users.json", "w", encoding='utf-8') as file:
+            json.dump(users, file, indent=4, ensure_ascii=False)
+        bot.send_message(chat_id=message.chat.id,
+                         text='*Прощайте* \nОчищаем все данные....')
 
     # Обработка callback'ов
     @bot.callback_query_handler(func=lambda call: call.data.startswith('settings'))
