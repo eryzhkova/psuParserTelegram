@@ -30,7 +30,6 @@ class MockHelper:
                     file.write('\n')
 
         if path.split('/')[0] == 'domofond':
-            # long-item-card__item___ubItG
             items = soup.find_all('a', {'class': 'long-item-card__item___ubItG'})
             for item in items:
                 url = item['href']
